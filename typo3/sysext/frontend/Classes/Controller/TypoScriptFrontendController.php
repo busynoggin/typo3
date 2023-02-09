@@ -4268,6 +4268,7 @@ if (version == "n3") {
 		if (!$this->absRefPrefix) {
 			return;
 		}
+		$encodedAbsRefPrefix = htmlspecialchars($this->absRefPrefix, ENT_QUOTES | ENT_HTML5);
 		$search = array(
 			'"typo3temp/',
 			'"typo3conf/ext/',
@@ -4277,12 +4278,12 @@ if (version == "n3") {
 			'"' . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir']
 		);
 		$replace = array(
-			'"' . $this->absRefPrefix . 'typo3temp/',
-			'"' . $this->absRefPrefix . 'typo3conf/ext/',
-			'"' . $this->absRefPrefix . TYPO3_mainDir . 'contrib/',
-			'"' . $this->absRefPrefix . TYPO3_mainDir . 'ext/',
-			'"' . $this->absRefPrefix . TYPO3_mainDir . 'sysext/',
-			'"' . $this->absRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir']
+			'"' . $encodedAbsRefPrefix . 'typo3temp/',
+			'"' . $encodedAbsRefPrefix . 'typo3conf/ext/',
+			'"' . $encodedAbsRefPrefix . TYPO3_mainDir . 'contrib/',
+			'"' . $encodedAbsRefPrefix . TYPO3_mainDir . 'ext/',
+			'"' . $encodedAbsRefPrefix . TYPO3_mainDir . 'sysext/',
+			'"' . $encodedAbsRefPrefix . $GLOBALS['TYPO3_CONF_VARS']['BE']['RTE_imageStorageDir']
 		);
 		/** @var $storageRepository StorageRepository */
 		$storageRepository = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Resource\\StorageRepository');
@@ -4291,14 +4292,14 @@ if (version == "n3") {
 			if ($storage->getDriverType() === 'Local' && $storage->isPublic() && $storage->isOnline()) {
 				$folder = $storage->getPublicUrl($storage->getRootLevelFolder(), TRUE);
 				$search[] = '"' . $folder;
-				$replace[] = '"' . $this->absRefPrefix . $folder;
+				$replace[] = '"' . $encodedAbsRefPrefix . $folder;
 			}
 		}
 		// Process additional directories
 		$directories = GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], TRUE);
 		foreach ($directories as $directory) {
 			$search[] = '"' . $directory;
-			$replace[] = '"' . $this->absRefPrefix . $directory;
+			$replace[] = '"' . $encodedAbsRefPrefix . $directory;
 		}
 		$this->content = str_replace(
 			$search,

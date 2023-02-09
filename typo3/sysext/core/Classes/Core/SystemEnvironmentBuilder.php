@@ -317,21 +317,8 @@ class SystemEnvironmentBuilder {
 	 * @return string Absolute path to entry script
 	 */
 	static protected function getPathThisScriptNonCli() {
-		$cgiPath = '';
-		if (isset($_SERVER['ORIG_PATH_TRANSLATED'])) {
-			$cgiPath = $_SERVER['ORIG_PATH_TRANSLATED'];
-		} elseif (isset($_SERVER['PATH_TRANSLATED'])) {
-			$cgiPath = $_SERVER['PATH_TRANSLATED'];
-		}
-		if ($cgiPath && in_array(PHP_SAPI, self::$supportedCgiServerApis, TRUE)) {
-			$scriptPath = $cgiPath;
-		} else {
-			if (isset($_SERVER['ORIG_SCRIPT_FILENAME'])) {
-				$scriptPath = $_SERVER['ORIG_SCRIPT_FILENAME'];
-			} else {
-				$scriptPath = $_SERVER['SCRIPT_FILENAME'];
-			}
-		}
+
+		$scriptPath = $_SERVER['SCRIPT_FILENAME'];
 		// Replace \ to / for Windows
 		$scriptPath = str_replace('\\', '/', $scriptPath);
 		// Replace double // to /
