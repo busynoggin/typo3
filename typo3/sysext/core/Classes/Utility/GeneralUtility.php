@@ -3443,10 +3443,7 @@ class GeneralUtility
         $retVal = '';
         switch ((string)$getEnvName) {
             case 'SCRIPT_NAME':
-                $retVal = self::isRunningOnCgiServerApi()
-                    && ($_SERVER['ORIG_PATH_INFO'] ?: $_SERVER['PATH_INFO'])
-                        ? ($_SERVER['ORIG_PATH_INFO'] ?: $_SERVER['PATH_INFO'])
-                        : ($_SERVER['ORIG_SCRIPT_NAME'] ?: $_SERVER['SCRIPT_NAME']);
+                $retVal = $_SERVER['SCRIPT_NAME'] ? $_SERVER['SCRIPT_NAME'] : '';
                 // Add a prefix if TYPO3 is behind a proxy: ext-domain.com => int-server.com/prefix
                 if (self::cmpIP($_SERVER['REMOTE_ADDR'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyIP'])) {
                     if (self::getIndpEnv('TYPO3_SSL') && $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyPrefixSSL']) {
@@ -3455,6 +3452,7 @@ class GeneralUtility
                         $retVal = $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyPrefix'] . $retVal;
                     }
                 }
+                $retVal = self::encodeFileSystemPathComponentForUrlPath($retVal);
                 break;
             case 'SCRIPT_FILENAME':
                 $retVal = PATH_thisScript;
@@ -3481,17 +3479,7 @@ class GeneralUtility
                 }
                 break;
             case 'PATH_INFO':
-                // $_SERVER['PATH_INFO'] != $_SERVER['SCRIPT_NAME'] is necessary because some servers (Windows/CGI)
-                // are seen to set PATH_INFO equal to script_name
-                // Further, there must be at least one '/' in the path - else the PATH_INFO value does not make sense.
-                // IF 'PATH_INFO' never works for our purpose in TYPO3 with CGI-servers,
-                // then 'PHP_SAPI=='cgi'' might be a better check.
-                // Right now strcmp($_SERVER['PATH_INFO'], GeneralUtility::getIndpEnv('SCRIPT_NAME')) will always
-                // return FALSE for CGI-versions, but that is only as long as SCRIPT_NAME is set equal to PATH_INFO
-                // because of PHP_SAPI=='cgi' (see above)
-                if (!self::isRunningOnCgiServerApi()) {
-                    $retVal = $_SERVER['PATH_INFO'];
-                }
+                $retVal = $_SERVER['PATH_INFO'] ? $_SERVER['PATH_INFO'] : '';
                 break;
             case 'TYPO3_REV_PROXY':
                 $retVal = self::cmpIP($_SERVER['REMOTE_ADDR'], $GLOBALS['TYPO3_CONF_VARS']['SYS']['reverseProxyIP']);
@@ -3573,7 +3561,10 @@ class GeneralUtility
                 // Some CGI-versions (LA13CGI) and mod-rewrite rules on MODULE versions will deliver a 'wrong' DOCUMENT_ROOT (according to our description). Further various aliases/mod_rewrite rules can disturb this as well.
                 // Therefore the DOCUMENT_ROOT is now always calculated as the SCRIPT_FILENAME minus the end part shared with SCRIPT_NAME.
                 $SFN = self::getIndpEnv('SCRIPT_FILENAME');
-                $SN_A = explode('/', strrev(self::getIndpEnv('SCRIPT_NAME')));
+                // Use rawurldecode to reverse the result of self::encodeFileSystemPathComponentForUrlPath()
+                // which has been applied to getIndpEnv(SCRIPT_NAME) for web URI usage.
+                // We compare with a file system path (SCRIPT_FILENAME) in here and therefore need to undo the encoding.
+                $SN_A = array_map('rawurldecode', explode('/', strrev(self::getIndpEnv('SCRIPT_NAME'))));
                 $SFN_A = explode('/', strrev($SFN));
                 $acc = [];
                 foreach ($SN_A as $kk => $vv) {
@@ -3739,6 +3730,12 @@ class GeneralUtility
         }
 
         return $hostMatch;
+    }
+
+
+    protected static function encodeFileSystemPathComponentForUrlPath($path)
+    {
+        return implode('/', array_map('rawurlencode', explode('/', $path)));
     }
 
     /**

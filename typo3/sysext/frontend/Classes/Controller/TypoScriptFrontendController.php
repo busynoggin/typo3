@@ -4073,6 +4073,7 @@ class TypoScriptFrontendController
         if (!$this->absRefPrefix) {
             return;
         }
+        $encodedAbsRefPrefix = htmlspecialchars($this->absRefPrefix, ENT_QUOTES | ENT_HTML5);
         $search = [
             '"typo3temp/',
             '"typo3conf/ext/',
@@ -4080,10 +4081,10 @@ class TypoScriptFrontendController
             '"' . TYPO3_mainDir . 'sysext/'
         ];
         $replace = [
-            '"' . $this->absRefPrefix . 'typo3temp/',
-            '"' . $this->absRefPrefix . 'typo3conf/ext/',
-            '"' . $this->absRefPrefix . TYPO3_mainDir . 'ext/',
-            '"' . $this->absRefPrefix . TYPO3_mainDir . 'sysext/'
+            '"' . $encodedAbsRefPrefix . 'typo3temp/',
+            '"' . $encodedAbsRefPrefix . 'typo3conf/ext/',
+            '"' . $encodedAbsRefPrefix . TYPO3_mainDir . 'ext/',
+            '"' . $encodedAbsRefPrefix . TYPO3_mainDir . 'sysext/'
         ];
         /** @var $storageRepository StorageRepository */
         $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
@@ -4092,14 +4093,14 @@ class TypoScriptFrontendController
             if ($storage->getDriverType() === 'Local' && $storage->isPublic() && $storage->isOnline()) {
                 $folder = $storage->getPublicUrl($storage->getRootLevelFolder(), true);
                 $search[] = '"' . $folder;
-                $replace[] = '"' . $this->absRefPrefix . $folder;
+                $replace[] = '"' . $encodedAbsRefPrefix . $folder;
             }
         }
         // Process additional directories
         $directories = GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['additionalAbsRefPrefixDirectories'], true);
         foreach ($directories as $directory) {
             $search[] = '"' . $directory;
-            $replace[] = '"' . $this->absRefPrefix . $directory;
+            $replace[] = '"' . $encodedAbsRefPrefix . $directory;
         }
         $this->content = str_replace(
             $search,
